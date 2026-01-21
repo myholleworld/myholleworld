@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>铝合金产品价格表（仅数字可编辑）</title>
+    <title>铝合金产品价格表（仅管理员可访问）</title>
     <style>
         * {
             margin: 0;
@@ -15,6 +15,84 @@
             padding: 20px;
             background-color: #f5f5f5;
         }
+        /* 登录界面样式 */
+        .login-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .login-box {
+            width: 400px;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .login-title {
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+        .form-item {
+            margin-bottom: 20px;
+        }
+        .form-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+        .form-item input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+        }
+        .form-item input:focus {
+            border-color: #4CAF50;
+        }
+        .save-account {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .save-account input {
+            width: auto;
+            margin-right: 8px;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .login-btn:hover {
+            background-color: #45a049;
+        }
+        .login-error {
+            color: #d32f2f;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+        /* 原有样式 */
         .container {
             max-width: 1000px;
             margin: 0 auto;
@@ -22,6 +100,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none; /* 默认隐藏，登录后显示 */
         }
         .date-title {
             text-align: right;
@@ -111,10 +190,39 @@
             margin-top: 10px;
             display: none;
         }
+        .error-tip {
+            color: #d32f2f;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 登录界面 -->
+    <div class="login-mask" id="loginMask">
+        <div class="login-box">
+            <div class="login-title">管理员登录</div>
+            <div class="form-item">
+                <label for="username">账号</label>
+                <input type="text" id="username" placeholder="请输入管理员账号">
+            </div>
+            <div class="form-item">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="请输入管理员密码">
+            </div>
+            <div class="save-account">
+                <input type="checkbox" id="saveAccount">
+                <label for="saveAccount">保存账号密码</label>
+            </div>
+            <button class="login-btn" onclick="handleLogin()">登录</button>
+            <div class="login-error" id="loginError">账号或密码错误，请重试！</div>
+        </div>
+    </div>
+
+    <!-- 原有价格表内容 -->
+    <div class="container" id="mainContainer">
         <div class="date-title" id="currentDate"></div>
 
         <div class="table-group">
@@ -157,10 +265,10 @@
                     <tr><td>95平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24000</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25750</td></tr>
                     <tr><td>120平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24000</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25750</td></tr>
                     <tr><td>150平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24000</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25750</td></tr>
-                    <tr><td>185平方异型</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
-                    <tr><td>240平方异型</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
-                    <tr><td>300平方异型</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
-                    <tr><td>400平方异型</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
+                    <tr><td>185平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
+                    <tr><td>240平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
+                    <tr><td>300平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
+                    <tr><td>400平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
                 </tbody>
             </table>
         </div>
@@ -168,90 +276,162 @@
         <button class="global-save-btn" onclick="saveAllTableData()">保存所有数据</button>
         <div class="loading" id="globalLoading">正在保存数据...</div>
         <div class="save-tip" id="globalTip">所有数据保存成功！</div>
+        <div class="error-tip" id="errorTip">输入格式错误！仅支持数字输入</div>
     </div>
 
     <script>
-        const updateDate = () => {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const day = now.getDate().toString().padStart(2, '0');
-            document.getElementById('currentDate').textContent = `${year}年${month}月${day}日`;
+        // 管理员账号密码配置
+        const ADMIN_USERNAME = 'fengtaidaoti';
+        const ADMIN_PASSWORD = 'fengtaidaoti666';
+
+        // 1. 页面加载时自动填充保存的账号密码
+        window.onload = function() {
+            // 读取保存的账号密码
+            const savedAccount = localStorage.getItem('savedAdminAccount');
+            if (savedAccount) {
+                const { username, password } = JSON.parse(savedAccount);
+                document.getElementById('username').value = username;
+                document.getElementById('password').value = password;
+                document.getElementById('saveAccount').checked = true;
+            }
+            // 初始化价格表相关功能（先不执行，登录后再初始化）
         };
-        updateDate();
-        setInterval(updateDate, 3600000);
 
-        function collectTableData(tableId) {
-            const tableRows = document.getElementById(tableId).querySelectorAll('tbody tr');
-            const dataList = [];
-            tableRows.forEach(row => {
-                const rowData = {};
-                const taxFreeCell = row.querySelector('[data-field="taxFree"]');
-                const taxIncludedCell = row.querySelector('[data-field="taxIncluded"]');
-                if (taxFreeCell) rowData.taxFree = taxFreeCell.textContent.trim();
-                if (taxIncludedCell) rowData.taxIncluded = taxIncludedCell.textContent.trim();
-                dataList.push(rowData);
-            });
-            return dataList;
-        }
+        // 2. 登录处理函数
+        function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const saveAccount = document.getElementById('saveAccount').checked;
+            const loginError = document.getElementById('loginError');
 
-        function saveSingleTableData(tableId) {
-            const dataList = collectTableData(tableId);
-            localStorage.setItem(`table_${tableId}`, JSON.stringify(dataList));
-        }
+            // 清空错误提示
+            loginError.style.display = 'none';
 
-        function saveAllTableData() {
-            const loadingDom = document.getElementById('globalLoading');
-            const tipDom = document.getElementById('globalTip');
-            loadingDom.style.display = 'block';
-            tipDom.style.display = 'none';
+            // 验证账号密码
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                // 保存账号密码（如果勾选）
+                if (saveAccount) {
+                    localStorage.setItem('savedAdminAccount', JSON.stringify({
+                        username: username,
+                        password: password
+                    }));
+                } else {
+                    // 取消保存则删除本地账号密码
+                    localStorage.removeItem('savedAdminAccount');
+                }
 
-            try {
-                saveSingleTableData('aluminumRodTable');
-                saveSingleTableData('aluminumConductorTable');
+                // 隐藏登录界面，显示价格表
+                document.getElementById('loginMask').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'block';
                 
-                loadingDom.style.display = 'none';
-                tipDom.style.display = 'block';
-                
+                // 初始化价格表的所有功能
+                initPriceTableFunctions();
+            } else {
+                // 显示错误提示
+                loginError.style.display = 'block';
+                // 2秒后隐藏错误提示
                 setTimeout(() => {
-                    tipDom.style.display = 'none';
+                    loginError.style.display = 'none';
                 }, 2000);
-            } catch (err) {
-                console.error('保存数据失败：', err);
-                loadingDom.style.display = 'none';
-                alert('保存失败，请重试！');
             }
         }
 
-        window.onload = () => {
-            const rodSavedData = localStorage.getItem('table_aluminumRodTable');
-            if (rodSavedData) {
-                const rodDataList = JSON.parse(rodSavedData);
-                const rodRows = document.getElementById('aluminumRodTable').querySelectorAll('tbody tr');
-                rodDataList.forEach((data, index) => {
-                    if (rodRows[index]) {
-                        const taxFreeCell = rodRows[index].querySelector('[data-field="taxFree"]');
-                        const taxIncludedCell = rodRows[index].querySelector('[data-field="taxIncluded"]');
+        // 3. 初始化价格表相关功能（登录后执行）
+        function initPriceTableFunctions() {
+            // 日期更新功能
+            const updateDate = () => {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                const day = now.getDate().toString().padStart(2, '0');
+                document.getElementById('currentDate').textContent = `${year}年${month}月${day}日`;
+            };
+            updateDate();
+            setInterval(updateDate, 3600000);
+
+            // 数字输入验证
+            const initNumberValidation = () => {
+                const editableCells = document.querySelectorAll('.editable-number');
+                editableCells.forEach(cell => {
+                    cell.addEventListener('input', (e) => {
+                        const pureNumber = e.target.textContent.replace(/[^0-9]/g, '');
+                        e.target.textContent = pureNumber || '';
+                        const errorTip = document.getElementById('errorTip');
+                        if (e.target.textContent !== pureNumber) {
+                            errorTip.style.display = 'block';
+                            setTimeout(() => errorTip.style.display = 'none', 2000);
+                        }
+                    });
+                    cell.addEventListener('blur', (e) => {
+                        if (!e.target.textContent.trim()) {
+                            e.target.textContent = '0';
+                        }
+                    });
+                });
+            };
+            initNumberValidation();
+
+            // 收集表格数据
+            function collectTableData(tableId) {
+                const tableRows = document.getElementById(tableId).querySelectorAll('tbody tr');
+                const dataList = [];
+                tableRows.forEach(row => {
+                    const rowData = {};
+                    const taxFreeCell = row.querySelector('[data-field="taxFree"]');
+                    const taxIncludedCell = row.querySelector('[data-field="taxIncluded"]');
+                    if (taxFreeCell) rowData.taxFree = taxFreeCell.textContent.trim();
+                    if (taxIncludedCell) rowData.taxIncluded = taxIncludedCell.textContent.trim();
+                    dataList.push(rowData);
+                });
+                return dataList;
+            }
+
+            // 保存单个表格数据
+            function saveSingleTableData(tableId) {
+                const dataList = collectTableData(tableId);
+                localStorage.setItem(`table_${tableId}`, JSON.stringify(dataList));
+            }
+
+            // 加载表格数据
+            function loadTableData(tableId) {
+                const savedData = localStorage.getItem(`table_${tableId}`);
+                if (!savedData) return;
+                const dataList = JSON.parse(savedData);
+                const tableRows = document.getElementById(tableId).querySelectorAll('tbody tr');
+                dataList.forEach((data, index) => {
+                    if (tableRows[index]) {
+                        const taxFreeCell = tableRows[index].querySelector('[data-field="taxFree"]');
+                        const taxIncludedCell = tableRows[index].querySelector('[data-field="taxIncluded"]');
                         if (taxFreeCell && data.taxFree) taxFreeCell.textContent = data.taxFree;
                         if (taxIncludedCell && data.taxIncluded) taxIncludedCell.textContent = data.taxIncluded;
                     }
                 });
             }
 
-            const conductorSavedData = localStorage.getItem('table_aluminumConductorTable');
-            if (conductorSavedData) {
-                const conductorDataList = JSON.parse(conductorSavedData);
-                const conductorRows = document.getElementById('aluminumConductorTable').querySelectorAll('tbody tr');
-                conductorDataList.forEach((data, index) => {
-                    if (conductorRows[index]) {
-                        const taxFreeCell = conductorRows[index].querySelector('[data-field="taxFree"]');
-                        const taxIncludedCell = conductorRows[index].querySelector('[data-field="taxIncluded"]');
-                        if (taxFreeCell && data.taxFree) taxFreeCell.textContent = data.taxFree;
-                        if (taxIncludedCell && data.taxIncluded) taxIncludedCell.textContent = data.taxIncluded;
-                    }
-                });
-            }
-        };
+            // 保存所有表格数据
+            window.saveAllTableData = function() {
+                const loadingDom = document.getElementById('globalLoading');
+                const tipDom = document.getElementById('globalTip');
+                loadingDom.style.display = 'block';
+                tipDom.style.display = 'none';
+
+                try {
+                    saveSingleTableData('aluminumRodTable');
+                    saveSingleTableData('aluminumConductorTable');
+                    loadingDom.style.display = 'none';
+                    tipDom.style.display = 'block';
+                    setTimeout(() => tipDom.style.display = 'none', 2000);
+                } catch (err) {
+                    console.error('保存数据失败：', err);
+                    loadingDom.style.display = 'none';
+                    alert('保存失败，请重试！');
+                }
+            };
+
+            // 加载保存的价格数据
+            loadTableData('aluminumRodTable');
+            loadTableData('aluminumConductorTable');
+        }
     </script>
 </body>
 </html>
