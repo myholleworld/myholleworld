@@ -44,11 +44,26 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            table-layout: fixed;
+        }
+        th:nth-child(1), td:nth-child(1) {
+            width: 50%;
+            text-align: center;
+        }
+        th:nth-child(2), td:nth-child(2) {
+            width: 25%;
+            text-align: center;
+        }
+        th:nth-child(3), td:nth-child(3) {
+            width: 25%;
+            text-align: center;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 12px;
-            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         th {
             background-color: #f8f8f8;
@@ -58,54 +73,50 @@
         tr:nth-child(even) {
             background-color: #fafafa;
         }
-        /* 仅数字单元格可编辑样式 + 可编辑核心属性配套样式 */
         .editable-number {
             background-color: #fffef0;
             border: 1px dashed #ffd700;
             cursor: text;
-            /* 编辑时的样式优化 */
             outline: none;
         }
         .editable-number:focus {
             background-color: #fff8e1;
             border-color: #ffc107;
         }
-        /* 保存按钮 */
-        .save-btn {
-            padding: 8px 15px;
+        .global-save-btn {
+            padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
+            font-size: 16px;
+            margin: 20px auto;
+            display: block;
         }
-        .save-btn:hover {
+        .global-save-btn:hover {
             background-color: #45a049;
         }
         .save-tip {
             color: #4CAF50;
             font-size: 14px;
-            margin-left: 10px;
+            text-align: center;
+            margin-top: 10px;
             display: none;
         }
-        .footer {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #fff8dc;
-            border: 1px solid #ffd700;
-            border-radius: 4px;
-            color: #333;
+        .loading {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 自动更新日期 -->
         <div class="date-title" id="currentDate"></div>
 
-        <!-- 铝合金杆表格（仅数字可编辑） -->
         <div class="table-group">
             <div class="table-title">铝合金杆</div>
             <table id="aluminumRodTable">
@@ -118,18 +129,14 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>铝合金杆</td> <!-- 规格型号不可编辑 -->
-                        <!-- 关键：添加 contenteditable="true" 让单元格可编辑 -->
+                        <td>铝合金杆</td>
                         <td class="editable-number" data-field="taxFree" contenteditable="true">23400</td>
                         <td class="editable-number" data-field="taxIncluded" contenteditable="true">25150</td>
                     </tr>
                 </tbody>
             </table>
-            <button class="save-btn" onclick="saveTableData('aluminumRodTable')">保存铝合金杆数据</button>
-            <span class="save-tip" id="rodTip">保存成功！</span>
         </div>
 
-        <!-- 铝合金导体表格（仅数字可编辑） -->
         <div class="table-group">
             <div class="table-title">铝合金导体</div>
             <table id="aluminumConductorTable">
@@ -156,79 +163,95 @@
                     <tr><td>400平方异型</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
                 </tbody>
             </table>
-            <button class="save-btn" onclick="saveTableData('aluminumConductorTable')">保存铝合金导体数据</button>
-            <span class="save-tip" id="conductorTip">保存成功！</span>
         </div>
 
-        <!-- 底部说明 -->
-        <div class="footer">
-            锋泰金属线材：销售铝合金杆、铝合金导体，对外加工铝和铝合金拔丝、绞丝、退火等业务。
-        </div>
+        <button class="global-save-btn" onclick="saveAllTableData()">保存所有数据</button>
+        <div class="loading" id="globalLoading">正在保存数据...</div>
+        <div class="save-tip" id="globalTip">所有数据保存成功！</div>
     </div>
 
     <script>
-        // 1. 自动更新当前日期（每次打开显示当天，跨天也会自动更新）
         const updateDate = () => {
-            const now = new Date(); // 获取设备当前实际日期
+            const now = new Date();
             const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0'); // 补0，如1月→01月
-            const day = now.getDate().toString().padStart(2, '0'); // 补0，如5日→05日
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
             document.getElementById('currentDate').textContent = `${year}年${month}月${day}日`;
         };
-        // 页面加载时更新日期
         updateDate();
-        // 每小时检查一次日期，确保网页开着跨凌晨也能自动更新日期
         setInterval(updateDate, 3600000);
 
-        // 2. 页面加载时，读取之前保存的数字数据
-        window.onload = () => {
-            loadTableData('aluminumRodTable');
-            loadTableData('aluminumConductorTable');
-        };
-
-        // 3. 读取本地保存的表格数据（仅恢复数字部分）
-        function loadTableData(tableId) {
-            const savedData = localStorage.getItem(`table_${tableId}`);
-            if (!savedData) return;
-
-            const dataList = JSON.parse(savedData);
-            const tableRows = document.getElementById(tableId).querySelectorAll('tbody tr');
-            
-            dataList.forEach((data, index) => {
-                if (tableRows[index]) {
-                    // 只更新数字单元格（不含税/含税）
-                    const taxFreeCell = tableRows[index].querySelector('[data-field="taxFree"]');
-                    const taxIncludedCell = tableRows[index].querySelector('[data-field="taxIncluded"]');
-                    if (taxFreeCell && data.taxFree) taxFreeCell.textContent = data.taxFree;
-                    if (taxIncludedCell && data.taxIncluded) taxIncludedCell.textContent = data.taxIncluded;
-                }
-            });
-        }
-
-        // 4. 保存修改后的数字数据到浏览器本地（规格型号不保存）
-        function saveTableData(tableId) {
+        function collectTableData(tableId) {
             const tableRows = document.getElementById(tableId).querySelectorAll('tbody tr');
             const dataList = [];
-
             tableRows.forEach(row => {
                 const rowData = {};
-                // 只获取数字单元格的数据
                 const taxFreeCell = row.querySelector('[data-field="taxFree"]');
                 const taxIncludedCell = row.querySelector('[data-field="taxIncluded"]');
                 if (taxFreeCell) rowData.taxFree = taxFreeCell.textContent.trim();
                 if (taxIncludedCell) rowData.taxIncluded = taxIncludedCell.textContent.trim();
                 dataList.push(rowData);
             });
-
-            // 存到浏览器本地，下次打开自动加载
-            localStorage.setItem(`table_${tableId}`, JSON.stringify(dataList));
-            
-            // 显示保存成功提示（2秒后消失）
-            const tipId = tableId === 'aluminumRodTable' ? 'rodTip' : 'conductorTip';
-            const tip = document.getElementById(tipId);
-            tip.style.display = 'inline';
-            setTimeout(() => tip.style.display = 'none', 2000);
+            return dataList;
         }
+
+        function saveSingleTableData(tableId) {
+            const dataList = collectTableData(tableId);
+            localStorage.setItem(`table_${tableId}`, JSON.stringify(dataList));
+        }
+
+        function saveAllTableData() {
+            const loadingDom = document.getElementById('globalLoading');
+            const tipDom = document.getElementById('globalTip');
+            loadingDom.style.display = 'block';
+            tipDom.style.display = 'none';
+
+            try {
+                saveSingleTableData('aluminumRodTable');
+                saveSingleTableData('aluminumConductorTable');
+                
+                loadingDom.style.display = 'none';
+                tipDom.style.display = 'block';
+                
+                setTimeout(() => {
+                    tipDom.style.display = 'none';
+                }, 2000);
+            } catch (err) {
+                console.error('保存数据失败：', err);
+                loadingDom.style.display = 'none';
+                alert('保存失败，请重试！');
+            }
+        }
+
+        window.onload = () => {
+            const rodSavedData = localStorage.getItem('table_aluminumRodTable');
+            if (rodSavedData) {
+                const rodDataList = JSON.parse(rodSavedData);
+                const rodRows = document.getElementById('aluminumRodTable').querySelectorAll('tbody tr');
+                rodDataList.forEach((data, index) => {
+                    if (rodRows[index]) {
+                        const taxFreeCell = rodRows[index].querySelector('[data-field="taxFree"]');
+                        const taxIncludedCell = rodRows[index].querySelector('[data-field="taxIncluded"]');
+                        if (taxFreeCell && data.taxFree) taxFreeCell.textContent = data.taxFree;
+                        if (taxIncludedCell && data.taxIncluded) taxIncludedCell.textContent = data.taxIncluded;
+                    }
+                });
+            }
+
+            const conductorSavedData = localStorage.getItem('table_aluminumConductorTable');
+            if (conductorSavedData) {
+                const conductorDataList = JSON.parse(conductorSavedData);
+                const conductorRows = document.getElementById('aluminumConductorTable').querySelectorAll('tbody tr');
+                conductorDataList.forEach((data, index) => {
+                    if (conductorRows[index]) {
+                        const taxFreeCell = conductorRows[index].querySelector('[data-field="taxFree"]');
+                        const taxIncludedCell = conductorRows[index].querySelector('[data-field="taxIncluded"]');
+                        if (taxFreeCell && data.taxFree) taxFreeCell.textContent = data.taxFree;
+                        if (taxIncludedCell && data.taxIncluded) taxIncludedCell.textContent = data.taxIncluded;
+                    }
+                });
+            }
+        };
     </script>
 </body>
 </html>
