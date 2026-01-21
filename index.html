@@ -349,15 +349,62 @@
             updateDate();
             setInterval(updateDate, 3600000);
 
-            // 数字输入验证
+            // 新增：获取光标位置工具函数
+            function getCursorPosition(element) {
+                let cursorPos = 0;
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const preRange = document.createRange();
+                    preRange.selectNodeContents(element);
+                    preRange.setEnd(range.startContainer, range.startOffset);
+                    cursorPos = preRange.toString().length;
+                }
+                return cursorPos;
+            }
+
+            // 新增：设置光标位置工具函数
+            function setCursorPosition(element, cursorPos) {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                range.collapse(true);
+                let currentNode = element.firstChild;
+                while (currentNode && cursorPos > currentNode.textContent.length) {
+                    cursorPos -= currentNode.textContent.length;
+                    currentNode = currentNode.nextSibling;
+                }
+                if (currentNode) {
+                    range.setStart(currentNode, cursorPos);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }
+
+            // 修改后：数字输入验证（修复光标位置问题）
             const initNumberValidation = () => {
                 const editableCells = document.querySelectorAll('.editable-number');
                 editableCells.forEach(cell => {
                     cell.addEventListener('input', (e) => {
-                        const pureNumber = e.target.textContent.replace(/[^0-9]/g, '');
-                        e.target.textContent = pureNumber || '';
-                        const errorTip = document.getElementById('errorTip');
-                        if (e.target.textContent !== pureNumber) {
+                        // 1. 保存当前光标位置
+                        const cursorPos = getCursorPosition(cell);
+                        // 2. 获取原始内容并过滤纯数字
+                        const originalText = cell.textContent;
+                        const pureNumber = originalText.replace(/[^0-9]/g, '');
+                        
+                        // 3. 仅在内容变化时才更新（避免无意义DOM操作）
+                        if (originalText !== pureNumber) {
+                            // 先清空内容（避免残留）
+                            cell.textContent = pureNumber;
+                            // 4. 恢复光标位置（处理过滤后长度变化的情况）
+                            const newCursorPos = Math.min(cursorPos, pureNumber.length);
+                            setTimeout(() => { // 确保DOM更新完成后再设置光标
+                                setCursorPosition(cell, newCursorPos);
+                            }, 0);
+                            
+                            // 显示格式错误提示
+                            const errorTip = document.getElementById('errorTip');
                             errorTip.style.display = 'block';
                             setTimeout(() => errorTip.style.display = 'none', 2000);
                         }
