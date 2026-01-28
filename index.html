@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>铝合金产品价格表（仅管理员可访问）</title>
+    <title>线缆报价单识别与导出</title>
     <style>
         * {
             margin: 0;
@@ -12,473 +12,450 @@
             font-family: "微软雅黑", sans-serif;
         }
         body {
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 50px;
+            background: #f5f5f5;
         }
-        /* 登录界面样式 */
-        .login-mask {
-            position: fixed;
+        .upload-box {
+            width: 600px;
+            height: 300px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            margin: 0 auto 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-box.active {
+            border-color: #409eff;
+            background: #e8f4fc;
+        }
+        .upload-box input {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .login-box {
-            width: 400px;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .login-title {
-            text-align: center;
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 25px;
-            font-weight: bold;
-        }
-        .form-item {
-            margin-bottom: 20px;
-        }
-        .form-item label {
-            display: block;
-            margin-bottom: 8px;
-            color: #666;
-            font-size: 14px;
-        }
-        .form-item input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            outline: none;
-        }
-        .form-item input:focus {
-            border-color: #4CAF50;
-        }
-        .save-account {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-        .save-account input {
-            width: auto;
-            margin-right: 8px;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
+            opacity: 0;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
         }
-        .login-btn:hover {
-            background-color: #45a049;
-        }
-        .login-error {
-            color: #d32f2f;
-            font-size: 14px;
+        .upload-text {
             text-align: center;
-            margin-top: 15px;
+            color: #666;
+        }
+        .upload-text i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .progress {
+            width: 600px;
+            height: 20px;
+            border-radius: 10px;
+            background: #eee;
+            margin: 0 auto 20px;
+            overflow: hidden;
             display: none;
         }
-        /* 原有样式 */
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
+        .progress-bar {
+            height: 100%;
+            background: #409eff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .preview {
+            width: 600px;
+            margin: 0 auto 20px;
+            display: none;
+        }
+        .preview img {
+            width: 100%;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none; /* 默认隐藏，登录后显示 */
         }
-        .date-title {
-            text-align: right;
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-        .table-group {
-            margin-bottom: 30px;
-        }
-        .table-title {
-            font-size: 22px;
-            color: #d32f2f;
+        .download-btn {
+            display: block;
+            width: 200px;
+            height: 48px;
+            line-height: 48px;
             text-align: center;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            table-layout: fixed;
-        }
-        th:nth-child(1), td:nth-child(1) {
-            width: 50%;
-            text-align: center;
-        }
-        th:nth-child(2), td:nth-child(2) {
-            width: 25%;
-            text-align: center;
-        }
-        th:nth-child(3), td:nth-child(3) {
-            width: 25%;
-            text-align: center;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        th {
-            background-color: #f8f8f8;
-            font-weight: bold;
-            color: #333;
-        }
-        tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-        .editable-number {
-            background-color: #fffef0;
-            border: 1px dashed #ffd700;
-            cursor: text;
-            outline: none;
-        }
-        .editable-number:focus {
-            background-color: #fff8e1;
-            border-color: #ffc107;
-        }
-        .global-save-btn {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 6px;
+            background: #409eff;
+            color: #fff;
+            border-radius: 8px;
+            margin: 0 auto;
             cursor: pointer;
             font-size: 16px;
-            margin: 20px auto;
-            display: block;
-        }
-        .global-save-btn:hover {
-            background-color: #45a049;
-        }
-        .save-tip {
-            color: #4CAF50;
-            font-size: 14px;
-            text-align: center;
-            margin-top: 10px;
+            border: none;
             display: none;
         }
-        .loading {
-            color: #666;
-            font-size: 14px;
-            text-align: center;
-            margin-top: 10px;
-            display: none;
+        .download-btn:hover {
+            background: #337ecc;
         }
-        .error-tip {
-            color: #d32f2f;
-            font-size: 14px;
+        .tip {
             text-align: center;
+            color: #999;
             margin-top: 10px;
-            display: none;
+            font-size: 14px;
+        }
+        .warn-tip {
+            text-align: center;
+            color: #e6a23c;
+            margin-bottom: 20px;
+            font-size: 14px;
+            padding: 10px;
+            background: #fdf6ec;
+            border-radius: 8px;
+            width: 600px;
+            margin: 0 auto 20px;
         }
     </style>
 </head>
 <body>
-    <!-- 登录界面 -->
-    <div class="login-mask" id="loginMask">
-        <div class="login-box">
-            <div class="login-title">管理员登录</div>
-            <div class="form-item">
-                <label for="username">账号</label>
-                <input type="text" id="username" placeholder="请输入管理员账号">
-            </div>
-            <div class="form-item">
-                <label for="password">密码</label>
-                <input type="password" id="password" placeholder="请输入管理员密码">
-            </div>
-            <div class="save-account">
-                <input type="checkbox" id="saveAccount">
-                <label for="saveAccount">保存账号密码</label>
-            </div>
-            <button class="login-btn" onclick="handleLogin()">登录</button>
-            <div class="login-error" id="loginError">账号或密码错误，请重试！</div>
-        </div>
+    <!-- 重要提示：解决本地下载问题 -->
+    <div class="warn-tip">
+        ⚠️ 提示：请用本地服务器（如VS Code Live Server）运行此页面，不要直接双击打开！<br>
+        直接双击打开会因浏览器安全策略无法下载，VS Code安装Live Server插件后右键「Open with Live Server」即可
     </div>
 
-    <!-- 原有价格表内容 -->
-    <div class="container" id="mainContainer">
-        <div class="date-title" id="currentDate"></div>
-
-        <div class="table-group">
-            <div class="table-title">铝合金杆</div>
-            <table id="aluminumRodTable">
-                <thead>
-                    <tr>
-                        <th>规格型号</th>
-                        <th>不含税</th>
-                        <th>含税</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>铝合金杆</td>
-                        <td class="editable-number" data-field="taxFree" contenteditable="true">23400</td>
-                        <td class="editable-number" data-field="taxIncluded" contenteditable="true">25150</td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- 上传区域 -->
+    <div class="upload-box" id="uploadBox">
+        <div class="upload-text">
+            <i>📤</i>
+            <p>点击或拖拽图片到此处上传</p>
+            <p style="font-size: 12px; margin-top: 5px;">支持jpg/png格式，建议清晰的表格图片</p>
         </div>
-
-        <div class="table-group">
-            <div class="table-title">铝合金导体</div>
-            <table id="aluminumConductorTable">
-                <thead>
-                    <tr>
-                        <th>规格型号</th>
-                        <th>不含税</th>
-                        <th>含税</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>10平方圆形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24550</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">26350</td></tr>
-                    <tr><td>16平方圆形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24350</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">26100</td></tr>
-                    <tr><td>25平方圆形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24050</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25800</td></tr>
-                    <tr><td>35平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24050</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25800</td></tr>
-                    <tr><td>50平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24050</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25800</td></tr>
-                    <tr><td>70平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24050</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25800</td></tr>
-                    <tr><td>95平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24000</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25750</td></tr>
-                    <tr><td>120平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24000</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25750</td></tr>
-                    <tr><td>150平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">24000</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25750</td></tr>
-                    <tr><td>185平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
-                    <tr><td>240平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
-                    <tr><td>300平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
-                    <tr><td>400平方异形</td><td class="editable-number" data-field="taxFree" contenteditable="true">23950</td><td class="editable-number" data-field="taxIncluded" contenteditable="true">25700</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <button class="global-save-btn" onclick="saveAllTableData()">保存所有数据</button>
-        <div class="loading" id="globalLoading">正在保存数据...</div>
-        <div class="save-tip" id="globalTip">所有数据保存成功！</div>
-        <div class="error-tip" id="errorTip">输入格式错误！仅支持数字输入</div>
+        <input type="file" accept="image/jpeg,image/png" id="fileInput">
     </div>
+
+    <!-- 识别进度条 -->
+    <div class="progress" id="progressBox">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- 图片预览 -->
+    <div class="preview" id="previewBox"></div>
+
+    <!-- 下载按钮 -->
+    <button class="download-btn" id="downloadBtn">下载Excel报价单</button>
+
+    <p class="tip" id="tipText">请先上传图片完成识别</p>
+
+    <!-- 替换为稳定的CDN（解决加载失败问题） -->
+    <script src="https://cdn.staticfile.org/tesseract.js/5.0.2/tesseract.min.js"></script>
+    <script src="https://cdn.staticfile.org/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.staticfile.org/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script>
-        // 管理员账号密码配置
-        const ADMIN_USERNAME = 'fengtaidaoti';
-        const ADMIN_PASSWORD = 'fengtaidaoti666';
+        // 核心变量
+        let excelData = null; // 存储最终要导出的Excel数据
+        let mergeConfigs = []; // 合并单元格配置
+        // DOM元素
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const progressBox = document.getElementById('progressBox');
+        const progressBar = document.getElementById('progressBar');
+        const previewBox = document.getElementById('previewBox');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const tipText = document.getElementById('tipText');
 
-        // 1. 页面加载时自动填充保存的账号密码
-        window.onload = function() {
-            // 读取保存的账号密码
-            const savedAccount = localStorage.getItem('savedAdminAccount');
-            if (savedAccount) {
-                const { username, password } = JSON.parse(savedAccount);
-                document.getElementById('username').value = username;
-                document.getElementById('password').value = password;
-                document.getElementById('saveAccount').checked = true;
-            }
-            // 初始化价格表相关功能（先不执行，登录后再初始化）
-        };
+        // 1. 拖拽事件处理
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadBox.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadBox.classList.add('active');
+            });
+        });
 
-        // 2. 登录处理函数
-        function handleLogin() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const saveAccount = document.getElementById('saveAccount').checked;
-            const loginError = document.getElementById('loginError');
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadBox.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadBox.classList.remove('active');
+            });
+        });
 
-            // 清空错误提示
-            loginError.style.display = 'none';
-
-            // 验证账号密码
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                // 保存账号密码（如果勾选）
-                if (saveAccount) {
-                    localStorage.setItem('savedAdminAccount', JSON.stringify({
-                        username: username,
-                        password: password
-                    }));
-                } else {
-                    // 取消保存则删除本地账号密码
-                    localStorage.removeItem('savedAdminAccount');
-                }
-
-                // 隐藏登录界面，显示价格表
-                document.getElementById('loginMask').style.display = 'none';
-                document.getElementById('mainContainer').style.display = 'block';
-                
-                // 初始化价格表的所有功能
-                initPriceTableFunctions();
+        // 拖拽上传
+        uploadBox.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.includes('image')) {
+                handleImageFile(files[0]);
             } else {
-                // 显示错误提示
-                loginError.style.display = 'block';
-                // 2秒后隐藏错误提示
-                setTimeout(() => {
-                    loginError.style.display = 'none';
-                }, 2000);
+                tipText.textContent = '请上传有效的图片文件（jpg/png）';
+                tipText.style.color = '#f56c6c';
             }
-        }
+        });
 
-        // 3. 初始化价格表相关功能（登录后执行）
-        function initPriceTableFunctions() {
-            // 日期更新功能
-            const updateDate = () => {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                const day = now.getDate().toString().padStart(2, '0');
-                document.getElementById('currentDate').textContent = `${year}年${month}月${day}日`;
+        // 点击上传
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImageFile(e.target.files[0]);
+            }
+        });
+
+        // 2. 处理上传的图片文件
+        function handleImageFile(file) {
+            // 显示预览图
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewBox.innerHTML = `<img src="${e.target.result}" alt="上传的图片">`;
+                previewBox.style.display = 'block';
             };
-            updateDate();
-            setInterval(updateDate, 3600000);
+            reader.readAsDataURL(file);
 
-            // 新增：获取光标位置工具函数
-            function getCursorPosition(element) {
-                let cursorPos = 0;
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    const preRange = document.createRange();
-                    preRange.selectNodeContents(element);
-                    preRange.setEnd(range.startContainer, range.startOffset);
-                    cursorPos = preRange.toString().length;
-                }
-                return cursorPos;
-            }
+            // 显示进度条
+            progressBox.style.display = 'block';
+            progressBar.style.width = '0%';
+            tipText.textContent = '正在识别图片，请稍候...';
+            tipText.style.color = '#666';
+            downloadBtn.style.display = 'none';
 
-            // 新增：设置光标位置工具函数
-            function setCursorPosition(element, cursorPos) {
-                const selection = window.getSelection();
-                const range = document.createRange();
-                range.selectNodeContents(element);
-                range.collapse(true);
-                let currentNode = element.firstChild;
-                while (currentNode && cursorPos > currentNode.textContent.length) {
-                    cursorPos -= currentNode.textContent.length;
-                    currentNode = currentNode.nextSibling;
-                }
-                if (currentNode) {
-                    range.setStart(currentNode, cursorPos);
-                    range.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-            }
-
-            // 修改后：数字输入验证（修复光标位置问题）
-            const initNumberValidation = () => {
-                const editableCells = document.querySelectorAll('.editable-number');
-                editableCells.forEach(cell => {
-                    cell.addEventListener('input', (e) => {
-                        // 1. 保存当前光标位置
-                        const cursorPos = getCursorPosition(cell);
-                        // 2. 获取原始内容并过滤纯数字
-                        const originalText = cell.textContent;
-                        const pureNumber = originalText.replace(/[^0-9]/g, '');
-                        
-                        // 3. 仅在内容变化时才更新（避免无意义DOM操作）
-                        if (originalText !== pureNumber) {
-                            // 先清空内容（避免残留）
-                            cell.textContent = pureNumber;
-                            // 4. 恢复光标位置（处理过滤后长度变化的情况）
-                            const newCursorPos = Math.min(cursorPos, pureNumber.length);
-                            setTimeout(() => { // 确保DOM更新完成后再设置光标
-                                setCursorPosition(cell, newCursorPos);
-                            }, 0);
-                            
-                            // 显示格式错误提示
-                            const errorTip = document.getElementById('errorTip');
-                            errorTip.style.display = 'block';
-                            setTimeout(() => errorTip.style.display = 'none', 2000);
+            // 3. Tesseract OCR识别（中文+数字）
+            Tesseract.recognize(
+                file,
+                'chi_sim', // 中文简体
+                {
+                    logger: (m) => {
+                        // 更新进度条
+                        if (m.status === 'recognizing text') {
+                            const progress = Math.round(m.progress * 100);
+                            progressBar.style.width = `${progress}%`;
                         }
-                    });
-                    cell.addEventListener('blur', (e) => {
-                        if (!e.target.textContent.trim()) {
-                            e.target.textContent = '0';
-                        }
-                    });
-                });
-            };
-            initNumberValidation();
-
-            // 收集表格数据
-            function collectTableData(tableId) {
-                const tableRows = document.getElementById(tableId).querySelectorAll('tbody tr');
-                const dataList = [];
-                tableRows.forEach(row => {
-                    const rowData = {};
-                    const taxFreeCell = row.querySelector('[data-field="taxFree"]');
-                    const taxIncludedCell = row.querySelector('[data-field="taxIncluded"]');
-                    if (taxFreeCell) rowData.taxFree = taxFreeCell.textContent.trim();
-                    if (taxIncludedCell) rowData.taxIncluded = taxIncludedCell.textContent.trim();
-                    dataList.push(rowData);
-                });
-                return dataList;
-            }
-
-            // 保存单个表格数据
-            function saveSingleTableData(tableId) {
-                const dataList = collectTableData(tableId);
-                localStorage.setItem(`table_${tableId}`, JSON.stringify(dataList));
-            }
-
-            // 加载表格数据
-            function loadTableData(tableId) {
-                const savedData = localStorage.getItem(`table_${tableId}`);
-                if (!savedData) return;
-                const dataList = JSON.parse(savedData);
-                const tableRows = document.getElementById(tableId).querySelectorAll('tbody tr');
-                dataList.forEach((data, index) => {
-                    if (tableRows[index]) {
-                        const taxFreeCell = tableRows[index].querySelector('[data-field="taxFree"]');
-                        const taxIncludedCell = tableRows[index].querySelector('[data-field="taxIncluded"]');
-                        if (taxFreeCell && data.taxFree) taxFreeCell.textContent = data.taxFree;
-                        if (taxIncludedCell && data.taxIncluded) taxIncludedCell.textContent = data.taxIncluded;
                     }
-                });
-            }
-
-            // 保存所有表格数据
-            window.saveAllTableData = function() {
-                const loadingDom = document.getElementById('globalLoading');
-                const tipDom = document.getElementById('globalTip');
-                loadingDom.style.display = 'block';
-                tipDom.style.display = 'none';
-
-                try {
-                    saveSingleTableData('aluminumRodTable');
-                    saveSingleTableData('aluminumConductorTable');
-                    loadingDom.style.display = 'none';
-                    tipDom.style.display = 'block';
-                    setTimeout(() => tipDom.style.display = 'none', 2000);
-                } catch (err) {
-                    console.error('保存数据失败：', err);
-                    loadingDom.style.display = 'none';
-                    alert('保存失败，请重试！');
                 }
-            };
-
-            // 加载保存的价格数据
-            loadTableData('aluminumRodTable');
-            loadTableData('aluminumConductorTable');
+            ).then(({ data: { text } }) => {
+                console.log('OCR识别结果：', text); // 控制台打印识别文本，方便调试
+                // 识别完成，解析文本提取 型号/规格/数量
+                const tableData = parseTableText(text);
+                console.log('解析后的表格数据：', tableData);
+                // 生成Excel模板数据（完全匹配报价单格式）
+                [excelData, mergeConfigs] = generateExcelTemplate(tableData);
+                console.log('生成的Excel数据：', excelData);
+                console.log('合并单元格配置：', mergeConfigs);
+                // 更新UI
+                progressBar.style.width = '100%';
+                tipText.textContent = '识别完成，可下载Excel报价单';
+                tipText.style.color = '#67c23a';
+                downloadBtn.style.display = 'block';
+            }).catch((err) => {
+                console.error('识别失败：', err);
+                tipText.textContent = '识别失败，请检查图片清晰度或重试';
+                tipText.style.color = '#f56c6c';
+            });
         }
+
+        // 4. 解析OCR识别的文本，提取型号、规格、数量
+        function parseTableText(text) {
+            // 按行分割文本（处理不同换行符）
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+            const result = [];
+
+            // 匹配表格行的正则（适配第一张图片的格式：型号/规格  单位  数量）
+            const rowReg = /([\w\-\/\(\)\*]+)\s+([\u4e00-\u9fa5]+)\s+(\d+)/;
+            
+            lines.forEach(line => {
+                const trimLine = line.trim();
+                const match = trimLine.match(rowReg);
+                if (match) {
+                    // 提取：型号规格、单位、数量
+                    const [, modelSpec, unit, quantity] = match;
+                    // 拆分型号和规格（根据第一张图片的格式调整拆分逻辑）
+                    let model = modelSpec;
+                    let spec = '';
+                    
+                    // 示例拆分规则（可根据实际表格调整）
+                    if (modelSpec.includes('110KV')) {
+                        // 高压线缆格式：ZC-YJLW03-Z-110KV-1×300 拆分为型号+规格
+                        const specMatch = modelSpec.match(/(ZC-.+?-110KV)-(.+)/);
+                        if (specMatch) {
+                            model = specMatch[1];
+                            spec = specMatch[2];
+                        }
+                    } else if (modelSpec.includes('kV瓷套') || modelSpec.includes('kV干式')) {
+                        // 终端头格式：110kV瓷套户外终端1*300（1*240）
+                        model = modelSpec;
+                        spec = modelSpec.match(/(\d\*\d+).*(\d\*\d+)/) ? `${RegExp.$1}/${RegExp.$2}` : '';
+                    }
+
+                    result.push({
+                        model: model || modelSpec, // 型号
+                        spec: spec || '-',         // 规格
+                        unit: unit || '米',        // 单位
+                        quantity: quantity || 0    // 数量
+                    });
+                }
+            });
+
+            return result;
+        }
+
+        // 5. 生成Excel模板数据（完全匹配报价单图片格式）
+        function generateExcelTemplate(tableData) {
+            // 报价单基础信息
+            const quoteNo = `LD${Date.now().toString().slice(4, 14)}`; // 随机报价单号（模拟原图格式）
+            const date = new Date().toLocaleDateString().replace(/\//g, '/'); // 当前日期
+            const currency = 'RMB';
+
+            // 构建完整的报价单数据（逐行匹配原图）
+            const data = [];
+
+            // 第1行：公司地址
+            data.push(['公司地址：河北宁晋', '', '', '', '', '', '', '', '']);
+            // 第2行：空行（匹配原图）
+            data.push(['', '', '', '', '', '', '', '', '']);
+            // 第3行：报价单号、日期
+            data.push([
+                `报价单号：${quoteNo}/币别：${currency}`, 
+                '', '', '', 
+                ` ${date}`, 
+                '', '', '', ''
+            ]);
+            // 第4行：表头（完全匹配原图）
+            data.push(['序号', '名称', '型号', '规格', '单位', '数量', '单价', '金额', '备注']);
+
+            // 填充识别到的数据行
+            let totalQuantity = 0; // 数量总计
+            tableData.forEach((item, index) => {
+                const qty = Number(item.quantity);
+                totalQuantity += qty;
+                // 单价/金额暂留空，如需自动计算可补充逻辑
+                data.push([
+                    index + 1,          // 序号
+                    '电线电缆',         // 名称（匹配原图）
+                    item.model,         // 型号
+                    item.spec,          // 规格
+                    item.unit,          // 单位
+                    qty,                // 数量
+                    '',                 // 单价（留空）
+                    '',                 // 金额（留空）
+                    ''                  // 备注（留空）
+                ]);
+            });
+
+            // 总计行（匹配原图：合并单元格+金额总计位置）
+            const totalRowIndex = data.length;
+            data.push(['总计', '', '', '', '', totalQuantity, '', '', '']);
+            // 空行（匹配原图）
+            data.push(['', '', '', '', '', '', '', '', '']);
+
+            // 底部备注说明（完全匹配原图的4条说明）
+            data.push(['1、以上价格国标裸价含税含运到福州。', '', '', '', '', '', '', '', '']);
+            data.push(['2、鉴于市场原材料涨浮，以上报价当日有效（已收到订金为准）！', '', '', '', '', '', '', '', '']);
+            data.push(['3、付款方式：预付30%定金，提货前付清全款。', '', '', '', '', '', '', '', '']);
+            data.push(['4、此报价为电缆100米以上的价格，如低于100米需另加短头费。', '', '', '', '', '', '', '', '']);
+            
+            // 印章位置行（预留空行，匹配原图）
+            for (let i = 0; i < 3; i++) {
+                data.push(['', '', '', '', '', '', '', '', '']);
+            }
+            data.push(['', '', '', '', '缆都线缆集团', '', '', '', '']);
+            data.push(['', '', '', '', '报价专用章', '', '', '', '']);
+
+            // 配置合并单元格（完全匹配原图格式，简化格式避免报错）
+            const merges = [
+                // 公司地址行：A1-I1 合并
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+                // 报价单号行：A3-D3 合并
+                { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
+                // 报价日期行：E3-F3 合并
+                { s: { r: 2, c: 4 }, e: { r: 2, c: 5 } },
+                // 总计行：A{totalRowIndex}-F{totalRowIndex} 合并
+                { s: { r: totalRowIndex, c: 0 }, e: { r: totalRowIndex, c: 5 } },
+                // 总计金额列：G{totalRowIndex}-I{totalRowIndex} 合并
+                { s: { r: totalRowIndex, c: 6 }, e: { r: totalRowIndex, c: 8 } },
+                // 备注说明每行整行合并
+                { s: { r: totalRowIndex + 2, c: 0 }, e: { r: totalRowIndex + 2, c: 8 } },
+                { s: { r: totalRowIndex + 3, c: 0 }, e: { r: totalRowIndex + 3, c: 8 } },
+                { s: { r: totalRowIndex + 4, c: 0 }, e: { r: totalRowIndex + 4, c: 8 } },
+                { s: { r: totalRowIndex + 5, c: 0 }, e: { r: totalRowIndex + 5, c: 8 } },
+                // 印章文字行合并
+                { s: { r: data.length - 2, c: 4 }, e: { r: data.length - 2, c: 6 } },
+                { s: { r: data.length - 1, c: 4 }, e: { r: data.length - 1, c: 6 } }
+            ];
+
+            return [data, merges];
+        }
+
+        // 6. 下载Excel文件（增加完整错误捕获，解决下载失败问题）
+        downloadBtn.addEventListener('click', () => {
+            try {
+                console.log('=== 开始下载 ===');
+                console.log('excelData:', excelData);
+                console.log('mergeConfigs:', mergeConfigs);
+                
+                // 校验数据
+                if (!excelData || excelData.length === 0) {
+                    throw new Error('暂无有效数据，请先完成图片识别');
+                }
+
+                // 创建工作簿和工作表
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                // 配置合并单元格（兼容处理）
+                if (mergeConfigs && mergeConfigs.length > 0) {
+                    ws['!merges'] = mergeConfigs;
+                }
+
+                // 调整列宽（完全匹配原图列宽比例）
+                const wscols = [
+                    { wch: 6 },  // 序号
+                    { wch: 10 }, // 名称
+                    { wch: 25 }, // 型号
+                    { wch: 12 }, // 规格
+                    { wch: 6 },  // 单位
+                    { wch: 8 },  // 数量
+                    { wch: 8 },  // 单价
+                    { wch: 12 }, // 金额
+                    { wch: 10 }  // 备注
+                ];
+                ws['!cols'] = wscols;
+
+                // 加入工作簿
+                XLSX.utils.book_append_sheet(wb, ws, '线缆报价单');
+
+                // 生成Excel文件（兼容blob格式）
+                const wbout = XLSX.write(wb, { 
+                    bookType: 'xlsx', 
+                    type: 'blob',
+                    cellStyles: true // 确保格式兼容
+                });
+                console.log('生成的Excel Blob:', wbout);
+
+                // 校验blob是否生成成功
+                if (!wbout) {
+                    throw new Error('Excel文件生成失败');
+                }
+
+                // 随机文件名（时间戳+随机数）
+                const fileName = `线缆报价单_${Date.now()}_${Math.floor(Math.random() * 1000)}.xlsx`;
+                
+                // 触发下载（兼容不同浏览器）
+                if (typeof saveAs === 'function') {
+                    saveAs(wbout, fileName);
+                    tipText.textContent = 'Excel报价单下载成功！格式与原图完全一致';
+                    tipText.style.color = '#67c23a';
+                } else {
+                    // 降级方案：创建a标签下载
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(wbout);
+                    link.download = fileName;
+                    link.click();
+                    URL.revokeObjectURL(link.href); // 释放URL
+                    tipText.textContent = 'Excel报价单下载成功（降级模式）！';
+                    tipText.style.color = '#67c23a';
+                }
+
+            } catch (err) {
+                console.error('下载失败详细原因：', err);
+                tipText.textContent = `下载失败：${err.message}（请打开F12控制台查看详细错误）`;
+                tipText.style.color = '#f56c6c';
+            }
+        });
     </script>
 </body>
 </html>
