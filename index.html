@@ -3,459 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>线缆报价单识别与导出</title>
+    <title>工作效率统计</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "微软雅黑", sans-serif;
+            font-family: "Microsoft YaHei", sans-serif;
+            transition: background 0.3s, color 0.3s;
         }
+
         body {
-            padding: 50px;
-            background: #f5f5f5;
-        }
-        .upload-box {
-            width: 600px;
-            height: 300px;
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            margin: 0 auto 30px;
+            background: #f8f9fa;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        /* 黑白极简模式样式 */
+        body.dark-mode{
+            background: #222;
+        }
+        body.dark-mode .title,body.dark-mode .tip{
+            color: #eee;
+        }
+        body.dark-mode .score-box{
+            background: #333;
+            color: #ddd;
+        }
+        body.dark-mode .game-area{
+            background: #444;
+            border-bottom-color: #666;
+        }
+        body.dark-mode .obstacle{
+            background: linear-gradient(to top,#888,#555);
+            box-shadow: none;
+        }
+
+        .title {
+            font-size: 24px;
+            color: #2d3436;
+            margin-bottom: 18px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .score-box {
+            background: #ffffff;
+            padding: 12px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 10px;
+            font-size: 17px;
+            color: #495057;
+            font-weight: 500;
+        }
+        .mode-btn{
+            margin-bottom: 20px;
+            padding: 6px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #eee;
             cursor: pointer;
-            transition: all 0.3s;
+            color: #333;
+        }
+        body.dark-mode .mode-btn{
+            background: #555;
+            color: #fff;
+        }
+
+        .game-area {
+            width: 480px;
+            height: 280px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
             position: relative;
             overflow: hidden;
+            border-bottom: 4px solid #636e72;
         }
-        .upload-box.active {
-            border-color: #409eff;
-            background: #e8f4fc;
-        }
-        .upload-box input {
+
+        /* ✅ 超逼真写实小猫 */
+        #cat {
+            width: 42px;
+            height: 36px;
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
+            bottom: 0;
+            left: 60px;
+            transition: bottom 0.05s linear, transform 0.2s;
+            transform-origin: center bottom;
+            /* 身体 */
+            background: #f9c988;
+            border-radius: 50% 50% 35% 35%;
+            box-shadow: inset -6px -4px 0 rgba(0,0,0,0.1);
         }
-        .upload-text {
-            text-align: center;
-            color: #666;
+        #cat::before{
+            content:'';
+            position:absolute;
+            width:18px; height:18px;
+            background:#f9c988;
+            border-radius:50%;
+            top:-8px; left:12px;
+            box-shadow: inset -3px -2px 0 rgba(0,0,0,0.1);
         }
-        .upload-text i {
-            font-size: 48px;
-            margin-bottom: 10px;
-            display: block;
+        #cat::after{
+            content:'';
+            position:absolute;
+            width:22px; height:12px;
+            background:#f9c988;
+            border-radius:50%;
+            bottom:-4px; left:10px;
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15);
         }
-        .progress {
-            width: 600px;
-            height: 20px;
-            border-radius: 10px;
-            background: #eee;
-            margin: 0 auto 20px;
-            overflow: hidden;
-            display: none;
+        /* 耳朵 */
+        .ear{
+            position:absolute;
+            width:12px; height:14px;
+            background:#f9c988;
+            border-radius:90% 0 90% 0;
+            top:-10px;
+            transform:rotate(-45deg);
         }
-        .progress-bar {
-            height: 100%;
-            background: #409eff;
-            width: 0%;
-            transition: width 0.3s;
+        .ear.left{ left:4px; }
+        .ear.right{ right:4px; transform:rotate(45deg); }
+        .ear::before{
+            content:'';
+            position:absolute;
+            width:6px; height:7px;
+            background:#ff9999;
+            border-radius:50%;
+            top:3px; left:3px;
         }
-        .preview {
-            width: 600px;
-            margin: 0 auto 20px;
-            display: none;
+        /* 眼睛 */
+        .eye{
+            position:absolute;
+            width:4px; height:8px;
+            background:#222;
+            border-radius:50%;
+            top:6px;
         }
-        .preview img {
-            width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .eye.left{ left:14px; }
+        .eye.right{ right:14px; }
+        /* 鼻子嘴巴 */
+        .nose{
+            position:absolute;
+            width:3px; height:2px;
+            background:#ff8888;
+            border-radius:50%;
+            top:14px; left:50%;
+            transform:translateX(-50%);
         }
-        .download-btn {
-            display: block;
-            width: 200px;
-            height: 48px;
-            line-height: 48px;
-            text-align: center;
-            background: #409eff;
-            color: #fff;
-            border-radius: 8px;
-            margin: 0 auto;
-            cursor: pointer;
-            font-size: 16px;
-            border: none;
-            display: none;
+        .mouth{
+            position:absolute;
+            width:6px; height:3px;
+            border-bottom:1.5px solid #222;
+            border-radius:0 0 50% 50%;
+            top:16px; left:50%;
+            transform:translateX(-50%);
         }
-        .download-btn:hover {
-            background: #337ecc;
+        /* 胡须 */
+        .whisker{
+            position:absolute;
+            width:10px; height:1px;
+            background:#333;
+            top:15px;
         }
+        .whisker.left1{ left:2px; transform:rotate(8deg); }
+        .whisker.left2{ left:2px; top:17px; transform:rotate(-8deg); }
+        .whisker.right1{ right:2px; transform:rotate(-8deg); }
+        .whisker.right2{ right:2px; top:17px; transform:rotate(8deg); }
+
+        /* 黑白模式小猫 */
+        body.dark-mode #cat,
+        body.dark-mode #cat::before,
+        body.dark-mode #cat::after,
+        body.dark-mode .ear{
+            background: #ccc;
+        }
+        body.dark-mode .ear::before{
+            background: #888;
+        }
+        body.dark-mode .eye,
+        body.dark-mode .mouth,
+        body.dark-mode .whisker{
+            background: #222;
+        }
+        body.dark-mode .nose{
+            background: #666;
+        }
+
+        #cat.jump-anim{
+            transform: scaleY(1.15) scaleX(0.9);
+        }
+
+        /* 障碍样式 */
+        .obstacle {
+            width: 28px;
+            background: linear-gradient(to top, #48dbfb, #0abde3);
+            border-radius: 4px 4px 0 0;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            box-shadow: 0 0 8px rgba(72, 219, 251,0.3);
+        }
+
+        /* 地面+滚动动画 */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 4px;
+            background: repeating-linear-gradient(90deg,#b2bec3 0,#b2bec3 10px,transparent 10px,transparent 20px);
+            animation: groundMove linear infinite;
+        }
+        @keyframes groundMove{
+            0%{left:0;}
+            100%{left:-50%;}
+        }
+        body.dark-mode .ground{
+            background: repeating-linear-gradient(90deg,#666 0,#666 10px,transparent 10px,transparent 20px);
+        }
+
+        /* 加分漂浮特效 */
+        .score-float{
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60;
+            animation: floatUp 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+        body.dark-mode .score-float{
+            color: #4cd137;
+        }
+        @keyframes floatUp{
+            0%{opacity:1;transform: translateY(0);}
+            100%{opacity:0;transform: translateY(-40px);}
+        }
+
         .tip {
+            margin-top: 16px;
+            font-size: 15px;
+            color: #8395a7;
+            font-weight: 500;
             text-align: center;
-            color: #999;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .warn-tip {
-            text-align: center;
-            color: #e6a23c;
-            margin-bottom: 20px;
-            font-size: 14px;
-            padding: 10px;
-            background: #fdf6ec;
-            border-radius: 8px;
-            width: 600px;
-            margin: 0 auto 20px;
         }
     </style>
 </head>
 <body>
-    <!-- 重要提示：解决本地下载问题 -->
-    <div class="warn-tip">
-        ⚠️ 提示：请用本地服务器（如VS Code Live Server）运行此页面，不要直接双击打开！<br>
-        直接双击打开会因浏览器安全策略无法下载，VS Code安装Live Server插件后右键「Open with Live Server」即可
-    </div>
-
-    <!-- 上传区域 -->
-    <div class="upload-box" id="uploadBox">
-        <div class="upload-text">
-            <i>📤</i>
-            <p>点击或拖拽图片到此处上传</p>
-            <p style="font-size: 12px; margin-top: 5px;">支持jpg/png格式，建议清晰的表格图片</p>
+    <h2 class="title">工作效率统计面板</h2>
+    <div class="score-box">当前得分：<span id="score">0</span></div>
+    <button class="mode-btn" id="modeBtn">切换黑白极简模式</button>
+    <div class="game-area" id="game">
+        <div id="cat">
+            <div class="ear left"></div>
+            <div class="ear right"></div>
+            <div class="eye left"></div>
+            <div class="eye right"></div>
+            <div class="nose"></div>
+            <div class="mouth"></div>
+            <div class="whisker left1"></div>
+            <div class="whisker left2"></div>
+            <div class="whisker right1"></div>
+            <div class="whisker right2"></div>
         </div>
-        <input type="file" accept="image/jpeg,image/png" id="fileInput">
+        <div class="ground"></div>
     </div>
-
-    <!-- 识别进度条 -->
-    <div class="progress" id="progressBox">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
-
-    <!-- 图片预览 -->
-    <div class="preview" id="previewBox"></div>
-
-    <!-- 下载按钮 -->
-    <button class="download-btn" id="downloadBtn">下载Excel报价单</button>
-
-    <p class="tip" id="tipText">请先上传图片完成识别</p>
-
-    <!-- 替换为稳定的CDN（解决加载失败问题） -->
-    <script src="https://cdn.staticfile.org/tesseract.js/5.0.2/tesseract.min.js"></script>
-    <script src="https://cdn.staticfile.org/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.staticfile.org/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <div class="tip">空格/点击跳跃｜支持二段跳｜自动加速</div>
 
     <script>
-        // 核心变量
-        let excelData = null; // 存储最终要导出的Excel数据
-        let mergeConfigs = []; // 合并单元格配置
-        // DOM元素
-        const uploadBox = document.getElementById('uploadBox');
-        const fileInput = document.getElementById('fileInput');
-        const progressBox = document.getElementById('progressBox');
-        const progressBar = document.getElementById('progressBar');
-        const previewBox = document.getElementById('previewBox');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const tipText = document.getElementById('tipText');
+        const cat = document.getElementById('cat');
+        const game = document.getElementById('game');
+        const scoreText = document.getElementById('score');
+        const modeBtn = document.getElementById('modeBtn');
+        const body = document.body;
 
-        // 1. 拖拽事件处理
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadBox.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                uploadBox.classList.add('active');
-            });
+        // 黑白模式切换
+        modeBtn.addEventListener('click',()=>{
+            body.classList.toggle('dark-mode');
         });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadBox.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                uploadBox.classList.remove('active');
-            });
-        });
+        let score = 0;
+        let canDoubleJump = true;
+        let jumpCount = 0;
+        let gravity = 3.5;
+        let catBottom = 0;
+        let gameSpeed = 5.5;
+        let gameInterval, obstacleInterval;
+        const ground = document.querySelector('.ground');
 
-        // 拖拽上传
-        uploadBox.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.includes('image')) {
-                handleImageFile(files[0]);
-            } else {
-                tipText.textContent = '请上传有效的图片文件（jpg/png）';
-                tipText.style.color = '#f56c6c';
-            }
-        });
+        // 二段跳+跳跃动画
+        function jump() {
+            if(jumpCount >= 2) return;
+            jumpCount ++;
+            cat.classList.add('jump-anim');
+            setTimeout(()=>cat.classList.remove('jump-anim'),200);
 
-        // 点击上传
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleImageFile(e.target.files[0]);
-            }
-        });
+            let jumpHeight = jumpCount === 1 ? 110 : 90;
+            let jumpSpeed = 13;
 
-        // 2. 处理上传的图片文件
-        function handleImageFile(file) {
-            // 显示预览图
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewBox.innerHTML = `<img src="${e.target.result}" alt="上传的图片">`;
-                previewBox.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-
-            // 显示进度条
-            progressBox.style.display = 'block';
-            progressBar.style.width = '0%';
-            tipText.textContent = '正在识别图片，请稍候...';
-            tipText.style.color = '#666';
-            downloadBtn.style.display = 'none';
-
-            // 3. Tesseract OCR识别（中文+数字）
-            Tesseract.recognize(
-                file,
-                'chi_sim', // 中文简体
-                {
-                    logger: (m) => {
-                        // 更新进度条
-                        if (m.status === 'recognizing text') {
-                            const progress = Math.round(m.progress * 100);
-                            progressBar.style.width = `${progress}%`;
+            let upInterval = setInterval(() => {
+                if (catBottom >= jumpHeight) {
+                    clearInterval(upInterval);
+                    let downInterval = setInterval(() => {
+                        if (catBottom <= 0) {
+                            clearInterval(downInterval);
+                            jumpCount = 0;
+                            catBottom = 0;
+                        } else {
+                            catBottom -= gravity;
                         }
-                    }
-                }
-            ).then(({ data: { text } }) => {
-                console.log('OCR识别结果：', text); // 控制台打印识别文本，方便调试
-                // 识别完成，解析文本提取 型号/规格/数量
-                const tableData = parseTableText(text);
-                console.log('解析后的表格数据：', tableData);
-                // 生成Excel模板数据（完全匹配报价单格式）
-                [excelData, mergeConfigs] = generateExcelTemplate(tableData);
-                console.log('生成的Excel数据：', excelData);
-                console.log('合并单元格配置：', mergeConfigs);
-                // 更新UI
-                progressBar.style.width = '100%';
-                tipText.textContent = '识别完成，可下载Excel报价单';
-                tipText.style.color = '#67c23a';
-                downloadBtn.style.display = 'block';
-            }).catch((err) => {
-                console.error('识别失败：', err);
-                tipText.textContent = '识别失败，请检查图片清晰度或重试';
-                tipText.style.color = '#f56c6c';
-            });
-        }
-
-        // 4. 解析OCR识别的文本，提取型号、规格、数量
-        function parseTableText(text) {
-            // 按行分割文本（处理不同换行符）
-            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-            const result = [];
-
-            // 匹配表格行的正则（适配第一张图片的格式：型号/规格  单位  数量）
-            const rowReg = /([\w\-\/\(\)\*]+)\s+([\u4e00-\u9fa5]+)\s+(\d+)/;
-            
-            lines.forEach(line => {
-                const trimLine = line.trim();
-                const match = trimLine.match(rowReg);
-                if (match) {
-                    // 提取：型号规格、单位、数量
-                    const [, modelSpec, unit, quantity] = match;
-                    // 拆分型号和规格（根据第一张图片的格式调整拆分逻辑）
-                    let model = modelSpec;
-                    let spec = '';
-                    
-                    // 示例拆分规则（可根据实际表格调整）
-                    if (modelSpec.includes('110KV')) {
-                        // 高压线缆格式：ZC-YJLW03-Z-110KV-1×300 拆分为型号+规格
-                        const specMatch = modelSpec.match(/(ZC-.+?-110KV)-(.+)/);
-                        if (specMatch) {
-                            model = specMatch[1];
-                            spec = specMatch[2];
-                        }
-                    } else if (modelSpec.includes('kV瓷套') || modelSpec.includes('kV干式')) {
-                        // 终端头格式：110kV瓷套户外终端1*300（1*240）
-                        model = modelSpec;
-                        spec = modelSpec.match(/(\d\*\d+).*(\d\*\d+)/) ? `${RegExp.$1}/${RegExp.$2}` : '';
-                    }
-
-                    result.push({
-                        model: model || modelSpec, // 型号
-                        spec: spec || '-',         // 规格
-                        unit: unit || '米',        // 单位
-                        quantity: quantity || 0    // 数量
-                    });
-                }
-            });
-
-            return result;
-        }
-
-        // 5. 生成Excel模板数据（完全匹配报价单图片格式）
-        function generateExcelTemplate(tableData) {
-            // 报价单基础信息
-            const quoteNo = `LD${Date.now().toString().slice(4, 14)}`; // 随机报价单号（模拟原图格式）
-            const date = new Date().toLocaleDateString().replace(/\//g, '/'); // 当前日期
-            const currency = 'RMB';
-
-            // 构建完整的报价单数据（逐行匹配原图）
-            const data = [];
-
-            // 第1行：公司地址
-            data.push(['公司地址：河北宁晋', '', '', '', '', '', '', '', '']);
-            // 第2行：空行（匹配原图）
-            data.push(['', '', '', '', '', '', '', '', '']);
-            // 第3行：报价单号、日期
-            data.push([
-                `报价单号：${quoteNo}/币别：${currency}`, 
-                '', '', '', 
-                ` ${date}`, 
-                '', '', '', ''
-            ]);
-            // 第4行：表头（完全匹配原图）
-            data.push(['序号', '名称', '型号', '规格', '单位', '数量', '单价', '金额', '备注']);
-
-            // 填充识别到的数据行
-            let totalQuantity = 0; // 数量总计
-            tableData.forEach((item, index) => {
-                const qty = Number(item.quantity);
-                totalQuantity += qty;
-                // 单价/金额暂留空，如需自动计算可补充逻辑
-                data.push([
-                    index + 1,          // 序号
-                    '电线电缆',         // 名称（匹配原图）
-                    item.model,         // 型号
-                    item.spec,          // 规格
-                    item.unit,          // 单位
-                    qty,                // 数量
-                    '',                 // 单价（留空）
-                    '',                 // 金额（留空）
-                    ''                  // 备注（留空）
-                ]);
-            });
-
-            // 总计行（匹配原图：合并单元格+金额总计位置）
-            const totalRowIndex = data.length;
-            data.push(['总计', '', '', '', '', totalQuantity, '', '', '']);
-            // 空行（匹配原图）
-            data.push(['', '', '', '', '', '', '', '', '']);
-
-            // 底部备注说明（完全匹配原图的4条说明）
-            data.push(['1、以上价格国标裸价含税含运到福州。', '', '', '', '', '', '', '', '']);
-            data.push(['2、鉴于市场原材料涨浮，以上报价当日有效（已收到订金为准）！', '', '', '', '', '', '', '', '']);
-            data.push(['3、付款方式：预付30%定金，提货前付清全款。', '', '', '', '', '', '', '', '']);
-            data.push(['4、此报价为电缆100米以上的价格，如低于100米需另加短头费。', '', '', '', '', '', '', '', '']);
-            
-            // 印章位置行（预留空行，匹配原图）
-            for (let i = 0; i < 3; i++) {
-                data.push(['', '', '', '', '', '', '', '', '']);
-            }
-            data.push(['', '', '', '', '缆都线缆集团', '', '', '', '']);
-            data.push(['', '', '', '', '报价专用章', '', '', '', '']);
-
-            // 配置合并单元格（完全匹配原图格式，简化格式避免报错）
-            const merges = [
-                // 公司地址行：A1-I1 合并
-                { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
-                // 报价单号行：A3-D3 合并
-                { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
-                // 报价日期行：E3-F3 合并
-                { s: { r: 2, c: 4 }, e: { r: 2, c: 5 } },
-                // 总计行：A{totalRowIndex}-F{totalRowIndex} 合并
-                { s: { r: totalRowIndex, c: 0 }, e: { r: totalRowIndex, c: 5 } },
-                // 总计金额列：G{totalRowIndex}-I{totalRowIndex} 合并
-                { s: { r: totalRowIndex, c: 6 }, e: { r: totalRowIndex, c: 8 } },
-                // 备注说明每行整行合并
-                { s: { r: totalRowIndex + 2, c: 0 }, e: { r: totalRowIndex + 2, c: 8 } },
-                { s: { r: totalRowIndex + 3, c: 0 }, e: { r: totalRowIndex + 3, c: 8 } },
-                { s: { r: totalRowIndex + 4, c: 0 }, e: { r: totalRowIndex + 4, c: 8 } },
-                { s: { r: totalRowIndex + 5, c: 0 }, e: { r: totalRowIndex + 5, c: 8 } },
-                // 印章文字行合并
-                { s: { r: data.length - 2, c: 4 }, e: { r: data.length - 2, c: 6 } },
-                { s: { r: data.length - 1, c: 4 }, e: { r: data.length - 1, c: 6 } }
-            ];
-
-            return [data, merges];
-        }
-
-        // 6. 下载Excel文件（增加完整错误捕获，解决下载失败问题）
-        downloadBtn.addEventListener('click', () => {
-            try {
-                console.log('=== 开始下载 ===');
-                console.log('excelData:', excelData);
-                console.log('mergeConfigs:', mergeConfigs);
-                
-                // 校验数据
-                if (!excelData || excelData.length === 0) {
-                    throw new Error('暂无有效数据，请先完成图片识别');
-                }
-
-                // 创建工作簿和工作表
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(excelData);
-
-                // 配置合并单元格（兼容处理）
-                if (mergeConfigs && mergeConfigs.length > 0) {
-                    ws['!merges'] = mergeConfigs;
-                }
-
-                // 调整列宽（完全匹配原图列宽比例）
-                const wscols = [
-                    { wch: 6 },  // 序号
-                    { wch: 10 }, // 名称
-                    { wch: 25 }, // 型号
-                    { wch: 12 }, // 规格
-                    { wch: 6 },  // 单位
-                    { wch: 8 },  // 数量
-                    { wch: 8 },  // 单价
-                    { wch: 12 }, // 金额
-                    { wch: 10 }  // 备注
-                ];
-                ws['!cols'] = wscols;
-
-                // 加入工作簿
-                XLSX.utils.book_append_sheet(wb, ws, '线缆报价单');
-
-                // 生成Excel文件（兼容blob格式）
-                const wbout = XLSX.write(wb, { 
-                    bookType: 'xlsx', 
-                    type: 'blob',
-                    cellStyles: true // 确保格式兼容
-                });
-                console.log('生成的Excel Blob:', wbout);
-
-                // 校验blob是否生成成功
-                if (!wbout) {
-                    throw new Error('Excel文件生成失败');
-                }
-
-                // 随机文件名（时间戳+随机数）
-                const fileName = `线缆报价单_${Date.now()}_${Math.floor(Math.random() * 1000)}.xlsx`;
-                
-                // 触发下载（兼容不同浏览器）
-                if (typeof saveAs === 'function') {
-                    saveAs(wbout, fileName);
-                    tipText.textContent = 'Excel报价单下载成功！格式与原图完全一致';
-                    tipText.style.color = '#67c23a';
+                        cat.style.bottom = catBottom + 'px';
+                    }, 20);
                 } else {
-                    // 降级方案：创建a标签下载
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(wbout);
-                    link.download = fileName;
-                    link.click();
-                    URL.revokeObjectURL(link.href); // 释放URL
-                    tipText.textContent = 'Excel报价单下载成功（降级模式）！';
-                    tipText.style.color = '#67c23a';
+                    catBottom += jumpSpeed;
+                }
+                cat.style.bottom = catBottom + 'px';
+            }, 20);
+        }
+
+        // 创建加分漂浮特效
+        function createScoreFloat(){
+            const float = document.createElement('div');
+            float.className = 'score-float';
+            float.innerText = '+1';
+            float.style.left = game.offsetWidth / 2 + 'px';
+            float.style.top = '80px';
+            game.appendChild(float);
+            setTimeout(()=>float.remove(),800);
+        }
+
+        // 生成障碍
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.height = Math.random() * 45 + 60 + 'px';
+            game.appendChild(obstacle);
+
+            let obstacleLeft = game.offsetWidth;
+            let moveInterval = setInterval(() => {
+                obstacleLeft -= gameSpeed;
+                obstacle.style.left = obstacleLeft + 'px';
+                ground.style.animationDuration = (12/gameSpeed) + 's';
+
+                // 精准碰撞
+                const catRect = cat.getBoundingClientRect();
+                const obsRect = obstacle.getBoundingClientRect();
+                if (
+                    catRect.left + 6 < obsRect.right &&
+                    catRect.right - 6 > obsRect.left &&
+                    catRect.bottom - 2 > obsRect.top
+                ) {
+                    clearInterval(moveInterval);
+                    clearInterval(gameInterval);
+                    clearInterval(obstacleInterval);
+                    setTimeout(() => {
+                        alert('游戏结束！最终得分：' + score);
+                        window.location.reload();
+                    }, 100);
                 }
 
-            } catch (err) {
-                console.error('下载失败详细原因：', err);
-                tipText.textContent = `下载失败：${err.message}（请打开F12控制台查看详细错误）`;
-                tipText.style.color = '#f56c6c';
-            }
+                // 加分+特效
+                if (obstacleLeft < -40) {
+                    score++;
+                    scoreText.innerText = score;
+                    createScoreFloat();
+                    clearInterval(moveInterval);
+                    obstacle.remove();
+                }
+            }, 20);
+        }
+
+        // 游戏加速
+        function startGame() {
+            gameInterval = setInterval(() => {
+                gameSpeed += 0.008;
+            }, 1000);
+            obstacleInterval = setInterval(createObstacle, 1100);
+        }
+
+        // 操作监听
+        document.addEventListener('keydown',(e)=>{
+            if(e.code === 'Space') jump();
         });
+        game.addEventListener('click',jump);
+
+        startGame();
     </script>
 </body>
 </html>
